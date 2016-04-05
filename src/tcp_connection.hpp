@@ -2,7 +2,9 @@
 #define TCP_CONNECTION_HPP_
 
 #include <ctime>
+#include <iostream>
 #include <string>
+#include <boost/array.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -22,6 +24,7 @@ private:
     tcp_connection(asio::io_service&);
     void handle_write(const asio::error_code& /* error */, size_t /* bytes transferrred */);
     tcp::socket socket_;
+    tcp::endpoint endpoint_;
     std::string message_;
 };
 

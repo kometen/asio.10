@@ -15,12 +15,36 @@ tcp::socket& tcp_connection::socket() {
 }
 
 void tcp_connection::start() {
+    for (;;) {
+        boost::array<char, 256> buf;
+        asio::error_code error;
+
+        size_t len = socket_.read_some(asio::buffer(buf), error);
+
+        if (error == asio::error::eof) {
+            break;                              // Closed by peer.
+        } else if (error) {
+            throw asio::system_error(error);    // Something went astray.
+        }
+//        std::cout.write(buf.data(), len);
+
+        message_ = make_daytime_string();
+        std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: ";
+        response += std::to_string(message_.size()) + "\r\nConnection: close\r\n\r\n" + message_;
+
+        asio::async_write(socket_, asio::buffer(response),
+                boost::bind(&tcp_connection::handle_write, shared_from_this(),
+                        asio::placeholders::error,
+                        asio::placeholders::bytes_transferred));
+    }
+//    std::cout << "Done reading." << std::endl;
+/*
     message_ = make_daytime_string();
 
     asio::async_write(socket_, asio::buffer(message_),
             boost::bind(&tcp_connection::handle_write, shared_from_this(),
                     asio::placeholders::error,
-                    asio::placeholders::bytes_transferred));
+                    asio::placeholders::bytes_transferred));*/
 }
 
 tcp_connection::~tcp_connection() { }
